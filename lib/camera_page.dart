@@ -18,7 +18,6 @@ class CameraPage extends StatefulWidget {
 
 class _CameraPageState extends State<CameraPage> {
   CameraController? _controller;
-  bool _isProcessing = false;
   final _textRecognizer = TextRecognizer();
 
   @override
@@ -34,7 +33,7 @@ class _CameraPageState extends State<CameraPage> {
     final camera = cameras.first;
     _controller = CameraController(
       camera,
-      ResolutionPreset.high,
+      ResolutionPreset.max, // 降低分辨率以减少内存使用
       enableAudio: false,
       imageFormatGroup: ImageFormatGroup.yuv420,
     );
@@ -44,11 +43,18 @@ class _CameraPageState extends State<CameraPage> {
     if (mounted) setState(() {});
   }
 
+  bool _isProcessing = false;
+  DateTime _lastProcessTime = DateTime.now();
+
   Future<void> _startImageStream() async {
     await _controller?.startImageStream((CameraImage image) async {
-      if (_isProcessing) return;
-
-      setState(() => _isProcessing = true);
+      // 添加节流控制，限制处理频率
+      final now = DateTime.now();
+      if (_isProcessing || now.difference(_lastProcessTime).inMilliseconds < 500) {
+        return;
+      }
+      _isProcessing = true;
+      _lastProcessTime = now;
 
       try {
         // 正确处理YUV420格式的图像
@@ -68,13 +74,13 @@ class _CameraPageState extends State<CameraPage> {
         List<String>? result = MRZHelper.getFinalListToParse([...ableToScanText]);
 
         if (result != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result.join('\n'))),
+          );
           final mrzResult = MRZParser.parse(result);
           if (mrzResult != null) {
             // 使用takePicture方法获取高质量图片而不是直接使用当前帧
             if (_controller != null && _controller!.value.isInitialized) {
-              // 暂停图像流处理，但不停止图像流
-              setState(() => _isProcessing = true);
-
               // 拍照并保存
               final XFile picture = await _controller!.takePicture();
               await _saveImage(picture.path);
@@ -91,13 +97,13 @@ class _CameraPageState extends State<CameraPage> {
           }
         }
       } catch (e) {
-        if (mounted) {
+        /* if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('处理失败: $e')),
           );
-        }
+        }*/
       } finally {
-        if (mounted) setState(() => _isProcessing = false);
+        _isProcessing = false;
       }
     });
   }
@@ -131,7 +137,12 @@ class _CameraPageState extends State<CameraPage> {
     if (status.isGranted) {
       final file = File(imagePath);
       final bytes = await file.readAsBytes();
-      await ImageGallerySaver.saveImage(bytes);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      await ImageGallerySaver.saveImage(
+        bytes,
+        name: 'MRZ_$timestamp.jpg',
+        quality: 100,
+      );
     }
   }
 
@@ -157,10 +168,6 @@ class _CameraPageState extends State<CameraPage> {
             painter: MaskPainter(),
             child: Container(),
           ),
-          if (_isProcessing)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
         ],
       ),
     );
