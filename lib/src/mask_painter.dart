@@ -3,13 +3,19 @@ import 'package:flutter/material.dart';
 
 class MaskPainter extends CustomPainter {
   final double animationValue;
+  final Color indicatorColor;
+  final Color overlayColor;
 
-  const MaskPainter({this.animationValue = 0.0});
+  const MaskPainter({
+    this.animationValue = 0.0,
+    this.indicatorColor = const Color(0xFFE1DED7),
+    this.overlayColor = Colors.black54,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black54
+      ..color = overlayColor
       ..style = PaintingStyle.fill;
 
     // 护照标准尺寸比例为1.42:1
@@ -42,7 +48,7 @@ class MaskPainter extends CustomPainter {
 
     // Draw corner indicators
     final cornerPaint = Paint()
-      ..color = const Color(0xFFE1DED7)
+      ..color = indicatorColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8.0
       ..strokeCap = StrokeCap.round
@@ -144,11 +150,11 @@ class MaskPainter extends CustomPainter {
     // 根据animationValue计算扫描线的Y坐标，使其在护照框内上下移动
     final scanLineY = top + (cardHeight * animationValue);
     final scanLinePaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0x00E1DED7), Color(0xFFE1DED7), Color(0x00E1DED7)],
-        stops: [0.0, 0.5, 1.0],
+        colors: [indicatorColor.withOpacity(0.1), indicatorColor, indicatorColor.withOpacity(0.1)],
+        stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromLTWH(left, scanLineY - 20, cardWidth, 40));
 
     canvas.drawRect(
@@ -158,5 +164,8 @@ class MaskPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(MaskPainter oldDelegate) => oldDelegate.animationValue != animationValue;
+  bool shouldRepaint(MaskPainter oldDelegate) =>
+      oldDelegate.animationValue != animationValue ||
+      oldDelegate.indicatorColor != indicatorColor ||
+      oldDelegate.overlayColor != overlayColor;
 }
