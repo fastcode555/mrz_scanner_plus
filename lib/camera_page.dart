@@ -107,6 +107,7 @@ class _CameraPageState extends State<CameraPage> {
     return Scaffold(
       body: CameraView(
         indicatorColor: const Color(0xffd94e8c),
+        mode: CameraMode.photo,
         onMRZDetected: _saveImage,
       ),
     );

@@ -7,17 +7,26 @@ import 'package:mrz_scanner_plus/src/mrz_helper.dart';
 import 'package:mrz_scanner_plus/src/mask_painter.dart';
 
 typedef OnMRZDetected = void Function(String imagePath, MRZResult mrzResult);
+typedef OnPhotoTaken = void Function(String imagePath);
+
+enum CameraMode { scan, photo }
 
 class CameraView extends StatefulWidget {
   final Color? indicatorColor;
   final OnMRZDetected? onMRZDetected;
+  final OnPhotoTaken? onPhotoTaken;
   final Widget? customOverlay;
+  final CameraMode mode;
+  final CameraController? controller;
 
   const CameraView({
     super.key,
     this.indicatorColor,
     this.onMRZDetected,
+    this.onPhotoTaken,
     this.customOverlay,
+    this.mode = CameraMode.scan,
+    this.controller,
   });
 
   @override
@@ -40,6 +49,15 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   }
 
   Future<void> _initializeCamera() async {
+    if (widget.controller != null) {
+      _controller = widget.controller;
+      if (widget.mode == CameraMode.scan) {
+        await _startImageStream();
+      }
+      if (mounted) setState(() {});
+      return;
+    }
+
     final cameras = await availableCameras();
     if (cameras.isEmpty) return;
 
@@ -52,7 +70,9 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     );
 
     await _controller?.initialize();
-    await _startImageStream();
+    if (widget.mode == CameraMode.scan) {
+      await _startImageStream();
+    }
     if (mounted) setState(() {});
   }
 
@@ -116,6 +136,14 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  Future<void> _takePicture() async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    final XFile picture = await _controller!.takePicture();
+    if (widget.onPhotoTaken != null) {
+      widget.onPhotoTaken!(picture.path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
@@ -137,7 +165,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
         ),
         if (widget.customOverlay != null)
           widget.customOverlay!
-        else
+        else if (widget.mode == CameraMode.scan)
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
@@ -150,6 +178,45 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
                 child: Container(),
               );
             },
+          )
+        else
+          CustomPaint(
+            painter: MaskPainter(
+              animationValue: null,
+              indicatorColor: widget.indicatorColor ?? const Color(0xFFE1DED7),
+            ),
+            size: Size.infinite,
+            child: Container(),
+          ),
+        if (widget.mode == CameraMode.photo)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 60,
+            child: Container(
+              width: 100,
+              height: 100,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(width: 3, color: widget.indicatorColor ?? const Color(0xFFE1DED7)),
+              ),
+              child: Container(
+                width: 85,
+                height: 85,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _takePicture,
+                  ),
+                ),
+              ),
+            ),
           ),
       ],
     );

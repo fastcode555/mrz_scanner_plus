@@ -2,12 +2,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class MaskPainter extends CustomPainter {
-  final double animationValue;
+  final double? animationValue;
   final Color indicatorColor;
   final Color overlayColor;
 
   const MaskPainter({
-    this.animationValue = 0.0,
+    this.animationValue,
     this.indicatorColor = const Color(0xFFE1DED7),
     this.overlayColor = Colors.black54,
   });
@@ -148,19 +148,21 @@ class MaskPainter extends CustomPainter {
 
     // Draw scanning line
     // 根据animationValue计算扫描线的Y坐标，使其在护照框内上下移动
-    final scanLineY = top + (cardHeight * animationValue);
-    final scanLinePaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [indicatorColor.withOpacity(0.1), indicatorColor, indicatorColor.withOpacity(0.1)],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH(left, scanLineY - 20, cardWidth, 40));
+    if (animationValue != null) {
+      final scanLineY = top + (cardHeight * animationValue!);
+      final scanLinePaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [indicatorColor.withOpacity(0.1), indicatorColor, indicatorColor.withOpacity(0.1)],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(Rect.fromLTWH(left, scanLineY - 20, cardWidth, 40));
 
-    canvas.drawRect(
-      Rect.fromLTWH(left, scanLineY - 2, cardWidth, 4),
-      scanLinePaint,
-    );
+      canvas.drawRect(
+        Rect.fromLTWH(left, scanLineY - 2, cardWidth, 4),
+        scanLinePaint,
+      );
+    }
   }
 
   @override
