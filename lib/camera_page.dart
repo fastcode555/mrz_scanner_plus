@@ -133,8 +133,6 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Future<void> _saveImage(String imagePath) async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
       final file = File(imagePath);
       final bytes = await file.readAsBytes();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -143,7 +141,6 @@ class _CameraPageState extends State<CameraPage> {
         name: 'MRZ_$timestamp.jpg',
         quality: 100,
       );
-    }
   }
 
   @override
