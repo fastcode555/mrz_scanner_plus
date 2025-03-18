@@ -8,6 +8,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:mrz_scanner_plus/src/mrz_extension.dart';
 import 'package:mrz_scanner_plus/src/mrz_helper.dart';
+import 'package:mrz_scanner_plus/src/mask_painter.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
@@ -98,7 +99,7 @@ class _CameraPageState extends State<CameraPage> {
 
     final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
     // 根据设备方向设置正确的旋转
-    final InputImageRotation imageRotation = InputImageRotation.rotation0deg;
+    const InputImageRotation imageRotation = InputImageRotation.rotation0deg;
 
     // 创建InputImage - 使用新版API
     return InputImage.fromBytes(
@@ -207,41 +208,4 @@ class _CameraPageState extends State<CameraPage> {
       ),
     );
   }
-}
-
-class MaskPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black54
-      ..style = PaintingStyle.fill;
-
-    // 护照标准尺寸比例为1.42:1
-    final double cardWidth = size.width * 0.85;
-    final double cardHeight = cardWidth / 1.42;
-    final double left = (size.width - cardWidth) / 2;
-    final double top = (size.height - cardHeight) / 2;
-
-    // Draw the semi-transparent overlay
-    canvas.drawPath(
-      Path.combine(
-        PathOperation.difference,
-        Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
-        Path()..addRect(Rect.fromLTWH(left, top, cardWidth, cardHeight)),
-      ),
-      paint,
-    );
-
-    // Draw the border of the card area
-    canvas.drawRect(
-      Rect.fromLTWH(left, top, cardWidth, cardHeight),
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
