@@ -73,7 +73,7 @@ class _CameraPageState extends State<CameraPage> {
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('MRZ码识别成功，图片已保存到相册')),
+                SnackBar(content: Text('MRZ码识别成功，图片已保存到相册：${mrzResult.toJson()}')),
               );
             }
 
