@@ -202,15 +202,25 @@ class _CameraPageState extends State<CameraPage> with SingleTickerProviderStateM
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('护照MRZ扫描')),
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          CameraPreview(_controller!),
+          SizedBox.expand(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _controller!.value.previewSize!.height,
+                height: _controller!.value.previewSize!.width,
+                child: CameraPreview(_controller!),
+              ),
+            ),
+          ),
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
               return CustomPaint(
                 painter: MaskPainter(animationValue: _animationController.value),
+                size: Size.infinite,
                 child: Container(),
               );
             },
