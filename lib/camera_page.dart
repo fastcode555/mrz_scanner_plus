@@ -1,13 +1,13 @@
 import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:mrz_parser/mrz_parser.dart';
-import 'package:mrz_scanner_plus/mrz_helper.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:mrz_scanner_plus/src/mrz_extension.dart';
+import 'package:mrz_scanner_plus/src/mrz_helper.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
@@ -60,48 +60,28 @@ class _CameraPageState extends State<CameraPage> {
         // 正确处理YUV420格式的图像
         final InputImage inputImage = _processImageForMlKit(image);
         final recognizedText = await _textRecognizer.processImage(inputImage);
+        debugPrint('ocr:${recognizedText.text}');
+        final mrzResult = MRZHelper.parse(recognizedText.text);
+        if (mrzResult != null) {
+          debugPrint('${mrzResult.toJson()}');
+          // 使用takePicture方法获取高质量图片而不是直接使用当前帧
+          if (_controller != null && _controller!.value.isInitialized) {
+            // 拍照并保存
+            final XFile picture = await _controller!.takePicture();
+            await _saveImage(picture.path);
 
-        String fullText = recognizedText.text;
-        String trimmedText = fullText.replaceAll(' ', '');
-        List allText = trimmedText.split('\n');
-
-        List<String> ableToScanText = [];
-        for (var e in allText) {
-          if (MRZHelper.testTextLine(e).isNotEmpty) {
-            ableToScanText.add(MRZHelper.testTextLine(e));
-          }
-        }
-        List<String>? result = MRZHelper.getFinalListToParse([...ableToScanText]);
-
-        if (result != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result.join('\n'))),
-          );
-          final mrzResult = MRZParser.parse(result);
-          if (mrzResult != null) {
-            // 使用takePicture方法获取高质量图片而不是直接使用当前帧
-            if (_controller != null && _controller!.value.isInitialized) {
-              // 拍照并保存
-              final XFile picture = await _controller!.takePicture();
-              await _saveImage(picture.path);
-
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('MRZ码识别成功，图片已保存到相册')),
-                );
-              }
-
-              // 短暂延迟后恢复处理
-              await Future.delayed(const Duration(milliseconds: 500));
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('MRZ码识别成功，图片已保存到相册')),
+              );
             }
+
+            // 短暂延迟后恢复处理
+            await Future.delayed(const Duration(milliseconds: 500));
           }
         }
       } catch (e) {
-        /* if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('处理失败: $e')),
-          );
-        }*/
+        debugPrint(e.toString());
       } finally {
         _isProcessing = false;
       }
@@ -133,14 +113,72 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   Future<void> _saveImage(String imagePath) async {
-      final file = File(imagePath);
-      final bytes = await file.readAsBytes();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      await ImageGallerySaver.saveImage(
-        bytes,
-        name: 'MRZ_$timestamp.jpg',
-        quality: 100,
+    final file = File(imagePath);
+    final bytes = await file.readAsBytes();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+    // 使用image包处理图像
+    final image = await decodeImageFromList(bytes);
+
+    // 确定图片的实际宽高，并计算正方形裁剪区域
+    final bool isPortrait = image.height > image.width;
+    final double squareSize = min(image.width.toDouble(), image.height.toDouble());
+    final double left = (image.width - squareSize) / 2;
+    final double top = (image.height - squareSize) / 2;
+
+    // 创建正方形裁剪区域
+    final ui.Rect cropRect = ui.Rect.fromLTWH(
+      left.round().toDouble(),
+      top.round().toDouble(),
+      squareSize.round().toDouble(),
+      squareSize.round().toDouble(),
+    );
+
+    // 创建PictureRecorder和Canvas
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
+
+    if (isPortrait) {
+      // 竖屏模式，不需要旋转
+      canvas.drawImageRect(
+        image,
+        cropRect,
+        Rect.fromLTWH(0, 0, squareSize, squareSize),
+        Paint(),
       );
+    } else {
+      // 横屏模式，需要旋转90度
+      canvas.translate(squareSize, 0);
+      canvas.rotate(pi / 2);
+      canvas.drawImageRect(
+        image,
+        cropRect,
+        Rect.fromLTWH(0, 0, squareSize, squareSize),
+        Paint(),
+      );
+    }
+
+    // 获取处理后的图像
+    final ui.Picture picture = recorder.endRecording();
+    final ui.Image processedImage = await picture.toImage(
+      squareSize.round(),
+      squareSize.round(),
+    );
+
+    // 转换为字节数据
+    final ByteData? byteData = await processedImage.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List processedBytes = byteData!.buffer.asUint8List();
+
+    // 保存处理后的图像
+    await ImageGallerySaver.saveImage(
+      processedBytes,
+      name: 'MRZ_$timestamp.jpg',
+      quality: 100,
+    );
+
+    // 释放资源
+    image.dispose();
+    processedImage.dispose();
   }
 
   @override
