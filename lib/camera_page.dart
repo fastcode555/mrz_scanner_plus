@@ -17,13 +17,18 @@ class CameraPage extends StatefulWidget {
   State<CameraPage> createState() => _CameraPageState();
 }
 
-class _CameraPageState extends State<CameraPage> {
+class _CameraPageState extends State<CameraPage> with SingleTickerProviderStateMixin {
   CameraController? _controller;
   final _textRecognizer = TextRecognizer();
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
     _initializeCamera();
   }
 
@@ -186,6 +191,7 @@ class _CameraPageState extends State<CameraPage> {
   void dispose() {
     _controller?.dispose();
     _textRecognizer.close();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -200,9 +206,14 @@ class _CameraPageState extends State<CameraPage> {
       body: Stack(
         children: [
           CameraPreview(_controller!),
-          CustomPaint(
-            painter: MaskPainter(),
-            child: Container(),
+          AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: MaskPainter(animationValue: _animationController.value),
+                child: Container(),
+              );
+            },
           ),
         ],
       ),

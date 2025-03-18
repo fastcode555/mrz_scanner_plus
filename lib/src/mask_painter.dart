@@ -2,6 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class MaskPainter extends CustomPainter {
+  final double animationValue;
+
+  const MaskPainter({this.animationValue = 0.0});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -135,8 +139,24 @@ class MaskPainter extends CustomPainter {
       Offset(left + cardWidth + offset, top + cardHeight - cornerRadius - verticalLineLength + offset),
       cornerPaint,
     );
+
+    // Draw scanning line
+    // 根据animationValue计算扫描线的Y坐标，使其在护照框内上下移动
+    final scanLineY = top + (cardHeight * animationValue);
+    final scanLinePaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0x00E1DED7), Color(0xFFE1DED7), Color(0x00E1DED7)],
+        stops: [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromLTWH(left, scanLineY - 20, cardWidth, 40));
+
+    canvas.drawRect(
+      Rect.fromLTWH(left, scanLineY - 2, cardWidth, 4),
+      scanLinePaint,
+    );
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(MaskPainter oldDelegate) => oldDelegate.animationValue != animationValue;
 }
