@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:mrz_parser/mrz_parser.dart';
 import 'package:mrz_scanner_plus/src/camera_view.dart';
 import 'package:mrz_scanner_plus/src/mrz_extension.dart';
@@ -15,6 +16,7 @@ class _CameraScanPageState extends State<CameraScanPage> {
   void _onMRZDetected(String imagePath, MRZResult mrzResult) {
     debugPrint('MRZ扫描结果: ${mrzResult.toJson()}');
     debugPrint('图片路径: $imagePath');
+    ImageGallerySaver.saveFile(imagePath);
     // 显示MRZ扫描结果
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

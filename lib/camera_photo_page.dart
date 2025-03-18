@@ -7,9 +7,7 @@ class CameraPhotoPage extends StatelessWidget {
   const CameraPhotoPage({super.key});
 
   Future<void> _onPhotoTaken(String imagePath) async {
-    final file = File(imagePath);
-    final bytes = await file.readAsBytes();
-    final result = await ImageGallerySaver.saveImage(bytes);
+    final result = await ImageGallerySaver.saveFile(imagePath);
     debugPrint('照片保存结果: $result');
   }
 
