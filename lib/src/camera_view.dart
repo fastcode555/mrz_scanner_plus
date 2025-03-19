@@ -25,6 +25,7 @@ class CameraView extends StatefulWidget {
   final CameraMode mode;
   final CameraController? controller;
   final Widget? photoButton;
+  final TextRecognitionScript script;
 
   const CameraView({
     super.key,
@@ -36,6 +37,7 @@ class CameraView extends StatefulWidget {
     this.mode = CameraMode.scan,
     this.controller,
     this.photoButton,
+    this.script = TextRecognitionScript.latin,
   });
 
   @override
@@ -44,12 +46,14 @@ class CameraView extends StatefulWidget {
 
 class _CameraViewState extends State<CameraView> with SingleTickerProviderStateMixin {
   CameraController? _controller;
-  final _textRecognizer = TextRecognizer();
+  late TextRecognizer _textRecognizer;
+
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+    _textRecognizer = TextRecognizer(script: widget.script);
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),

@@ -12,6 +12,10 @@ class CameraScanPage extends StatefulWidget {
 }
 
 class _CameraScanPageState extends State<CameraScanPage> {
+  void _onDetected(String text) {
+    debugPrint('ocr recognize: $text');
+  }
+
   void _onMRZDetected(String imagePath, MRZResult mrzResult) {
     debugPrint('MRZ扫描结果: ${mrzResult.toJson()}');
     debugPrint('图片路径: $imagePath');
@@ -30,6 +34,7 @@ class _CameraScanPageState extends State<CameraScanPage> {
       body: CameraView(
         mode: CameraMode.scan,
         onMRZDetected: _onMRZDetected,
+        onDetected: _onDetected,
       ),
     );
   }
