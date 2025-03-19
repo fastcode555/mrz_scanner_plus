@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/painting.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:mrz_parser/mrz_parser.dart';
 import 'package:mrz_scanner_plus/src/mrz_helper.dart';
@@ -13,6 +12,21 @@ import 'package:mrz_scanner_plus/src/mask_painter.dart';
 typedef OnMRZDetected = void Function(String imagePath, MRZResult mrzResult);
 typedef OnDetected = void Function(String recognizeText);
 typedef OnPhotoTaken = void Function(String imagePath);
+
+class MrzCameraController {
+  CameraController? controller;
+  BuildContext? context;
+
+  void _bind(CameraController? controller, BuildContext context) {
+    this.controller = controller;
+    this.context = context;
+  }
+
+  void takePicture() {
+    final state = context?.findAncestorStateOfType<_CameraViewState>();
+    state?._takePicture();
+  }
+}
 
 enum CameraMode { scan, photo }
 
@@ -23,19 +37,19 @@ class CameraView extends StatefulWidget {
   final OnDetected? onDetected;
   final Widget? customOverlay;
   final CameraMode mode;
-  final CameraController? controller;
+  final MrzCameraController? controller;
   final Widget? photoButton;
   final TextRecognitionScript script;
 
   const CameraView({
     super.key,
+    this.controller,
     this.indicatorColor,
     this.onMRZDetected,
     this.onDetected,
     this.onPhotoTaken,
     this.customOverlay,
     this.mode = CameraMode.scan,
-    this.controller,
     this.photoButton,
     this.script = TextRecognitionScript.latin,
   });
@@ -62,15 +76,6 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   }
 
   Future<void> _initializeCamera() async {
-    if (widget.controller != null) {
-      _controller = widget.controller;
-      if (widget.mode == CameraMode.scan) {
-        await _startImageStream();
-      }
-      if (mounted) setState(() {});
-      return;
-    }
-
     final cameras = await availableCameras();
     if (cameras.isEmpty) return;
 
@@ -87,6 +92,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
       await _startImageStream();
     }
     if (mounted) setState(() {});
+    widget.controller?._bind(_controller, context);
   }
 
   bool _isProcessing = false;
