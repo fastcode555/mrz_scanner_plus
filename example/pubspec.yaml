@@ -2,7 +2,7 @@ name: mrz_scanner_plus_example
 description: "Demonstrates how to use the mrz_scanner_plus plugin."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'https://github.com/fastcode555/mrz_scanner_plus.git' # Remove this line if you wish to publish to pub.dev
 
 environment:
   sdk: ^3.5.4
