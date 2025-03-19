@@ -11,6 +11,7 @@ import 'package:mrz_scanner_plus/src/mrz_helper.dart';
 import 'package:mrz_scanner_plus/src/mask_painter.dart';
 
 typedef OnMRZDetected = void Function(String imagePath, MRZResult mrzResult);
+typedef OnDetected = void Function(String recognizeText);
 typedef OnPhotoTaken = void Function(String imagePath);
 
 enum CameraMode { scan, photo }
@@ -19,18 +20,22 @@ class CameraView extends StatefulWidget {
   final Color? indicatorColor;
   final OnMRZDetected? onMRZDetected;
   final OnPhotoTaken? onPhotoTaken;
+  final OnDetected? onDetected;
   final Widget? customOverlay;
   final CameraMode mode;
   final CameraController? controller;
+  final Widget? photoButton;
 
   const CameraView({
     super.key,
     this.indicatorColor,
     this.onMRZDetected,
+    this.onDetected,
     this.onPhotoTaken,
     this.customOverlay,
     this.mode = CameraMode.scan,
     this.controller,
+    this.photoButton,
   });
 
   @override
@@ -95,81 +100,13 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
       try {
         final InputImage inputImage = _processImageForMlKit(image);
         final recognizedText = await _textRecognizer.processImage(inputImage);
+        widget.onDetected?.call(recognizedText.text);
         final mrzResult = MRZHelper.parse(recognizedText.text);
         if (mrzResult != null && widget.onMRZDetected != null) {
           if (_controller != null && _controller!.value.isInitialized) {
-            final XFile picture = await _controller!.takePicture();
             await _controller?.stopImageStream();
-
-            // 处理图片旋转
-            final imageFile = File(picture.path);
-
-            final bytes = await imageFile.readAsBytes();
-            final image = await decodeImageFromList(bytes);
-
-            // 获取预览尺寸和实际图片尺寸
-            final screenWidth = MediaQuery.of(context).size.width;
-            final screenHeight = MediaQuery.of(context).size.height;
-
-            final screenRatio = screenWidth / screenHeight;
-            final realWidth = image.height * screenRatio;
-
-            final bool isPortrait = image.height > image.width;
-
-            // 计算护照尺寸（与遮罩框相同的比例1.42:1）
-            final double cardWidth = realWidth * 0.85;
-            final double cardHeight = cardWidth / 1.42;
-            final double left = (image.width - cardWidth) / 2;
-            final double top = (image.height - cardHeight) / 2;
-
-            // 创建护照尺寸的裁剪区域
-            final ui.Rect cropRect = ui.Rect.fromLTWH(
-              left,
-              top,
-              cardWidth,
-              cardHeight,
-            );
-
-            // 创建PictureRecorder和Canvas
-            final ui.PictureRecorder recorder = ui.PictureRecorder();
-            final Canvas canvas = Canvas(recorder);
-
-            if (isPortrait) {
-              // 竖屏模式，不需要旋转
-              canvas.drawImageRect(
-                image,
-                cropRect, // 源矩形使用裁剪区域
-                Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
-                Paint(),
-              );
-            } else {
-              // 横屏模式，需要旋转90度
-              canvas.translate(cardHeight, 0);
-              canvas.rotate(pi / 2);
-              canvas.drawImageRect(
-                image,
-                cropRect, // 源矩形使用裁剪区域
-                Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
-                Paint(),
-              );
-            }
-
-            // 获取处理后的图像
-            final ui.Picture imagePicture = recorder.endRecording();
-            final ui.Image processedImage = await imagePicture.toImage(
-              cardWidth.round(),
-              cardHeight.round(),
-            );
-            // 转换为字节数据
-            final ByteData? byteData = await processedImage.toByteData(format: ui.ImageByteFormat.png);
-            final Uint8List processedBytes = byteData!.buffer.asUint8List();
-            await imageFile.writeAsBytes(processedBytes);
-
-            // 释放资源
-            image.dispose();
-            processedImage.dispose();
-
-            widget.onMRZDetected!(picture.path, mrzResult);
+            final cropFile = await _takeAndCropImage();
+            widget.onMRZDetected?.call(cropFile.path, mrzResult);
           }
         }
       } catch (e) {
@@ -211,77 +148,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
 
   Future<void> _takePicture() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
-    final XFile picture = await _controller!.takePicture();
-
-    // 处理图片旋转和裁剪
-    final imageFile = File(picture.path);
-    final bytes = await imageFile.readAsBytes();
-    final image = await decodeImageFromList(bytes);
-
-    // 获取预览尺寸和实际图片尺寸
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    final screenRatio = screenWidth / screenHeight;
-    final realWidth = image.height * screenRatio;
-
-    final bool isPortrait = image.height > image.width;
-
-    // 计算护照尺寸（与遮罩框相同的比例1.42:1）
-    final double cardWidth = realWidth * 0.85;
-    final double cardHeight = cardWidth / 1.42;
-    final double left = (image.width - cardWidth) / 2;
-    final double top = (image.height - cardHeight) / 2;
-    // 创建护照尺寸的裁剪区域
-    final ui.Rect cropRect = ui.Rect.fromLTWH(
-      left,
-      top,
-      cardWidth,
-      cardHeight,
-    );
-
-    // 创建PictureRecorder和Canvas
-    final ui.PictureRecorder recorder = ui.PictureRecorder();
-    final Canvas canvas = Canvas(recorder);
-
-    if (isPortrait) {
-      // 竖屏模式，不需要旋转
-      canvas.drawImageRect(
-        image,
-        cropRect,
-        Rect.fromLTWH(0, 0, cardWidth, cardHeight),
-        Paint(),
-      );
-    } else {
-      // 横屏模式，需要旋转90度
-      canvas.translate(cardHeight, 0);
-      canvas.rotate(pi / 2);
-      canvas.drawImageRect(
-        image,
-        cropRect,
-        Rect.fromLTWH(0, 0, cardWidth, cardHeight),
-        Paint(),
-      );
-    }
-
-    // 获取处理后的图像
-    final ui.Picture imagePicture = recorder.endRecording();
-    final ui.Image processedImage = await imagePicture.toImage(
-      cardWidth.round(),
-      cardHeight.round(),
-    );
-    // 转换为字节数据
-    final ByteData? byteData = await processedImage.toByteData(format: ui.ImageByteFormat.png);
-    final Uint8List processedBytes = byteData!.buffer.asUint8List();
-    await imageFile.writeAsBytes(processedBytes);
-
-    // 释放资源
-    image.dispose();
-    processedImage.dispose();
-
-    if (widget.onPhotoTaken != null) {
-      widget.onPhotoTaken!(picture.path);
-    }
+    final file = await _takeAndCropImage();
+    widget.onPhotoTaken?.call(file.path);
   }
 
   @override
@@ -328,37 +196,112 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
             size: Size.infinite,
             child: Container(),
           ),
-        if (widget.mode == CameraMode.photo)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 60,
-            child: Container(
-              width: 100,
-              height: 100,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(width: 3, color: widget.indicatorColor ?? const Color(0xFFE1DED7)),
-              ),
-              child: Container(
-                width: 85,
-                height: 85,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: _takePicture,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        if (widget.mode == CameraMode.photo) widget.photoButton ?? _photoWidget(),
       ],
     );
+  }
+
+  Widget _photoWidget() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 60,
+      child: Container(
+        width: 100,
+        height: 100,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(width: 3, color: widget.indicatorColor ?? const Color(0xFFE1DED7)),
+        ),
+        child: Container(
+          width: 85,
+          height: 85,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: _takePicture,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<File> _takeAndCropImage() async {
+    final XFile picture = await _controller!.takePicture();
+    // 处理图片旋转
+    final imageFile = File(picture.path);
+
+    final bytes = await imageFile.readAsBytes();
+    final image = await decodeImageFromList(bytes);
+
+    // 获取预览尺寸和实际图片尺寸
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    final screenRatio = screenWidth / screenHeight;
+    final realWidth = image.height * screenRatio;
+
+    final bool isPortrait = image.height > image.width;
+
+    // 计算护照尺寸（与遮罩框相同的比例1.42:1）
+    final double cardWidth = realWidth * 0.85;
+    final double cardHeight = cardWidth / 1.42;
+    final double left = (image.width - cardWidth) / 2;
+    final double top = (image.height - cardHeight) / 2;
+
+    // 创建护照尺寸的裁剪区域
+    final ui.Rect cropRect = ui.Rect.fromLTWH(
+      left,
+      top,
+      cardWidth,
+      cardHeight,
+    );
+
+    // 创建PictureRecorder和Canvas
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
+
+    if (isPortrait) {
+      // 竖屏模式，不需要旋转
+      canvas.drawImageRect(
+        image,
+        cropRect, // 源矩形使用裁剪区域
+        Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
+        Paint(),
+      );
+    } else {
+      // 横屏模式，需要旋转90度
+      canvas.translate(cardHeight, 0);
+      canvas.rotate(pi / 2);
+      canvas.drawImageRect(
+        image,
+        cropRect, // 源矩形使用裁剪区域
+        Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
+        Paint(),
+      );
+    }
+
+    // 获取处理后的图像
+    final ui.Picture imagePicture = recorder.endRecording();
+    final ui.Image processedImage = await imagePicture.toImage(
+      cardWidth.round(),
+      cardHeight.round(),
+    );
+    // 转换为字节数据
+    final ByteData? byteData = await processedImage.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List processedBytes = byteData!.buffer.asUint8List();
+    await imageFile.writeAsBytes(processedBytes);
+
+    // 释放资源
+    image.dispose();
+    processedImage.dispose();
+    return imageFile;
   }
 }
