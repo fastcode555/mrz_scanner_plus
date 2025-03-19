@@ -19,33 +19,15 @@
 
 ### スキャンモード
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan.jpg" alt="MRZスキャン" style="max-width: 30%;">
-    <p><em>MRZスキャンインターフェース</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan_result.jpg" alt="MRZスキャン結果" style="max-width: 30%;">
-    <p><em>スキャン結果</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_card_callback.jpg" alt="MRZカードコールバック" style="max-width: 30%;">
-    <p><em>文書画像</em></p>
-  </div>
-</div>
+| MRZスキャンインターフェース | スキャン結果 | 文書画像 |
+|:---:|:---:|:---:|
+| <img src="images/img_mrz_scan.jpg" alt="MRZスキャン" width="250"> | <img src="images/img_mrz_scan_result.jpg" alt="MRZスキャン結果" width="250"> | <img src="images/img_mrz_card_callback.jpg" alt="MRZカードコールバック" width="250"> |
 
 ### 写真モード
 
-<div style="display: flex; justify-content: space-around;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_card_take_photo.jpg" alt="カード撮影" style="max-width: 45%;">
-    <p><em>撮影インターフェース</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_callback.jpg" alt="MRZコールバック" style="max-width: 45%;">
-    <p><em>処理結果</em></p>
-  </div>
-</div>
+| 撮影インターフェース | 処理結果 |
+|:---:|:---:|
+| <img src="images/img_card_take_photo.jpg" alt="カード撮影" width="350"> | <img src="images/img_mrz_callback.jpg" alt="MRZコールバック" width="350"> |
 
 ## インストール
 

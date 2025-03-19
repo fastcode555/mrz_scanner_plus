@@ -19,33 +19,15 @@ A Flutter plugin for scanning and parsing Machine Readable Zone (MRZ) from trave
 
 ### Scanning Mode
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan.jpg" alt="MRZ Scanning" style="max-width: 30%;">
-    <p><em>MRZ scanning interface</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan_result.jpg" alt="MRZ Scan Result" style="max-width: 30%;">
-    <p><em>Scan result</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_card_callback.jpg" alt="MRZ Card Callback" style="max-width: 30%;">
-    <p><em>Document image</em></p>
-  </div>
-</div>
+| MRZ scanning interface | Scan result | Document image |
+|:---:|:---:|:---:|
+| <img src="images/img_mrz_scan.jpg" alt="MRZ Scanning" width="250"> | <img src="images/img_mrz_scan_result.jpg" alt="MRZ Scan Result" width="250"> | <img src="images/img_mrz_card_callback.jpg" alt="MRZ Card Callback" width="250"> |
 
 ### Photo Mode
 
-<div style="display: flex; justify-content: space-around;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_card_take_photo.jpg" alt="Card Take Photo" style="max-width: 45%;">
-    <p><em>Photo capture interface</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_callback.jpg" alt="MRZ Callback" style="max-width: 45%;">
-    <p><em>Processing result</em></p>
-  </div>
-</div>
+| Photo capture interface | Processing result |
+|:---:|:---:|
+| <img src="images/img_card_take_photo.jpg" alt="Card Take Photo" width="350"> | <img src="images/img_mrz_callback.jpg" alt="MRZ Callback" width="350"> |
 
 ## Installation
 

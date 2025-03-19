@@ -19,33 +19,15 @@
 
 ### 스캔 모드
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan.jpg" alt="MRZ 스캔" style="max-width: 30%;">
-    <p><em>MRZ 스캔 인터페이스</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan_result.jpg" alt="MRZ 스캔 결과" style="max-width: 30%;">
-    <p><em>스캔 결과</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_card_callback.jpg" alt="MRZ 카드 콜백" style="max-width: 30%;">
-    <p><em>문서 이미지</em></p>
-  </div>
-</div>
+| MRZ 스캔 인터페이스 | 스캔 결과 | 문서 이미지 |
+|:---:|:---:|:---:|
+| <img src="images/img_mrz_scan.jpg" alt="MRZ 스캔" width="250"> | <img src="images/img_mrz_scan_result.jpg" alt="MRZ 스캔 결과" width="250"> | <img src="images/img_mrz_card_callback.jpg" alt="MRZ 카드 콜백" width="250"> |
 
 ### 사진 모드
 
-<div style="display: flex; justify-content: space-around;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_card_take_photo.jpg" alt="카드 촬영" style="max-width: 45%;">
-    <p><em>촬영 인터페이스</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_callback.jpg" alt="MRZ 콜백" style="max-width: 45%;">
-    <p><em>처리 결과</em></p>
-  </div>
-</div>
+| 촬영 인터페이스 | 처리 결과 |
+|:---:|:---:|
+| <img src="images/img_card_take_photo.jpg" alt="카드 촬영" width="350"> | <img src="images/img_mrz_callback.jpg" alt="MRZ 콜백" width="350"> |
 
 ## 설치
 

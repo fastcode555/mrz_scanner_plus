@@ -19,33 +19,15 @@
 
 ### 扫描模式
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan.jpg" alt="MRZ 扫描" style="max-width: 30%;">
-    <p><em>MRZ 扫描界面</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan_result.jpg" alt="MRZ 扫描结果" style="max-width: 30%;">
-    <p><em>扫描结果</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_card_callback.jpg" alt="MRZ 卡片回调" style="max-width: 30%;">
-    <p><em>文档图像</em></p>
-  </div>
-</div>
+| MRZ 扫描界面 | 扫描结果 | 文档图像 |
+|:---:|:---:|:---:|
+| <img src="images/img_mrz_scan.jpg" alt="MRZ 扫描" width="250"> | <img src="images/img_mrz_scan_result.jpg" alt="MRZ 扫描结果" width="250"> | <img src="images/img_mrz_card_callback.jpg" alt="MRZ 卡片回调" width="250"> |
 
 ### 拍照模式
 
-<div style="display: flex; justify-content: space-around;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_card_take_photo.jpg" alt="卡片拍照" style="max-width: 45%;">
-    <p><em>拍照界面</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_callback.jpg" alt="MRZ 回调" style="max-width: 45%;">
-    <p><em>处理结果</em></p>
-  </div>
-</div>
+| 拍照界面 | 处理结果 |
+|:---:|:---:|
+| <img src="images/img_card_take_photo.jpg" alt="卡片拍照" width="350"> | <img src="images/img_mrz_callback.jpg" alt="MRZ 回调" width="350"> |
 
 ## 安装
 

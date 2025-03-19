@@ -19,33 +19,15 @@ Ein Flutter-Plugin zum Scannen und Parsen der maschinenlesbaren Zone (MRZ) von R
 
 ### Scanmodus
 
-<div style="display: flex; justify-content: space-between;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan.jpg" alt="MRZ Scannen" style="max-width: 30%;">
-    <p><em>MRZ-Scan-Oberfläche</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_scan_result.jpg" alt="MRZ Scan-Ergebnis" style="max-width: 30%;">
-    <p><em>Scan-Ergebnis</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_card_callback.jpg" alt="MRZ Karten-Callback" style="max-width: 30%;">
-    <p><em>Dokumentenbild</em></p>
-  </div>
-</div>
+| MRZ-Scan-Oberfläche | Scan-Ergebnis | Dokumentenbild |
+|:---:|:---:|:---:|
+| <img src="images/img_mrz_scan.jpg" alt="MRZ Scannen" width="250"> | <img src="images/img_mrz_scan_result.jpg" alt="MRZ Scan-Ergebnis" width="250"> | <img src="images/img_mrz_card_callback.jpg" alt="MRZ Karten-Callback" width="250"> |
 
 ### Fotomodus
 
-<div style="display: flex; justify-content: space-around;">
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_card_take_photo.jpg" alt="Karte fotografieren" style="max-width: 45%;">
-    <p><em>Fotoaufnahme-Oberfläche</em></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="images/img_mrz_callback.jpg" alt="MRZ Callback" style="max-width: 45%;">
-    <p><em>Verarbeitungsergebnis</em></p>
-  </div>
-</div>
+| Fotoaufnahme-Oberfläche | Verarbeitungsergebnis |
+|:---:|:---:|
+| <img src="images/img_card_take_photo.jpg" alt="Karte fotografieren" width="350"> | <img src="images/img_mrz_callback.jpg" alt="MRZ Callback" width="350"> |
 
 ## Installation
 
