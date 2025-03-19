@@ -103,26 +103,31 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
 
             // 处理图片旋转
             final imageFile = File(picture.path);
+
             final bytes = await imageFile.readAsBytes();
             final image = await decodeImageFromList(bytes);
 
-            // 确定图片的实际宽高，并计算护照尺寸裁剪区域
+            // 获取预览尺寸和实际图片尺寸
+            final screenWidth = MediaQuery.of(context).size.width;
+            final screenHeight = MediaQuery.of(context).size.height;
+
+            final screenRatio = screenWidth / screenHeight;
+            final realWidth = image.height * screenRatio;
+
             final bool isPortrait = image.height > image.width;
-            final double imageWidth = (isPortrait ? image.width : image.height).toDouble();
-            final double imageHeight = (isPortrait ? image.height : image.width).toDouble();
-            
+
             // 计算护照尺寸（与遮罩框相同的比例1.42:1）
-            final double cardWidth = imageWidth * 0.85;
+            final double cardWidth = realWidth * 0.85;
             final double cardHeight = cardWidth / 1.42;
-            final double left = (imageWidth - cardWidth) / 2;
-            final double top = (imageHeight - cardHeight) / 2;
+            final double left = (image.width - cardWidth) / 2;
+            final double top = (image.height - cardHeight) / 2;
 
             // 创建护照尺寸的裁剪区域
             final ui.Rect cropRect = ui.Rect.fromLTWH(
-              left.round().toDouble(),
-              top.round().toDouble(),
-              cardWidth.round().toDouble(),
-              cardHeight.round().toDouble(),
+              left,
+              top,
+              cardWidth,
+              cardHeight,
             );
 
             // 创建PictureRecorder和Canvas
@@ -133,7 +138,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
               // 竖屏模式，不需要旋转
               canvas.drawImageRect(
                 image,
-                Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()), // 源矩形使用完整图像
+                cropRect, // 源矩形使用裁剪区域
                 Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
                 Paint(),
               );
@@ -143,7 +148,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
               canvas.rotate(pi / 2);
               canvas.drawImageRect(
                 image,
-                Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()), // 源矩形使用完整图像
+                cropRect, // 源矩形使用裁剪区域
                 Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
                 Paint(),
               );
@@ -213,17 +218,20 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     final bytes = await imageFile.readAsBytes();
     final image = await decodeImageFromList(bytes);
 
-    // 确定图片的实际宽高，并计算护照尺寸裁剪区域
-    final bool isPortrait = image.height > image.width;
-    final double imageWidth = isPortrait ? image.width.toDouble() : image.height.toDouble();
-    final double imageHeight = isPortrait ? image.height.toDouble() : image.width.toDouble();
-    
-    // 计算护照尺寸（与遮罩框相同的比例1.42:1）
-    final double cardWidth = imageWidth * 0.85;
-    final double cardHeight = cardWidth / 1.42;
-    final double left = (imageWidth - cardWidth) / 2;
-    final double top = (imageHeight - cardHeight) / 2;
+    // 获取预览尺寸和实际图片尺寸
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
+    final screenRatio = screenWidth / screenHeight;
+    final realWidth = image.height * screenRatio;
+
+    final bool isPortrait = image.height > image.width;
+
+    // 计算护照尺寸（与遮罩框相同的比例1.42:1）
+    final double cardWidth = realWidth * 0.85;
+    final double cardHeight = cardWidth / 1.42;
+    final double left = (image.width - cardWidth) / 2;
+    final double top = (image.height - cardHeight) / 2;
     // 创建护照尺寸的裁剪区域
     final ui.Rect cropRect = ui.Rect.fromLTWH(
       left,
