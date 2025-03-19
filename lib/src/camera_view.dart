@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/painting.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:mrz_parser/mrz_parser.dart';
 import 'package:mrz_scanner_plus/src/mrz_helper.dart';
@@ -105,18 +106,23 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
             final bytes = await imageFile.readAsBytes();
             final image = await decodeImageFromList(bytes);
 
-            // 确定图片的实际宽高，并计算正方形裁剪区域
+            // 确定图片的实际宽高，并计算护照尺寸裁剪区域
             final bool isPortrait = image.height > image.width;
-            final double squareSize = min(image.width.toDouble(), image.height.toDouble());
-            final double left = (image.width - squareSize) / 2;
-            final double top = (image.height - squareSize) / 2;
+            final double imageWidth = (isPortrait ? image.width : image.height).toDouble();
+            final double imageHeight = (isPortrait ? image.height : image.width).toDouble();
+            
+            // 计算护照尺寸（与遮罩框相同的比例1.42:1）
+            final double cardWidth = imageWidth * 0.85;
+            final double cardHeight = cardWidth / 1.42;
+            final double left = (imageWidth - cardWidth) / 2;
+            final double top = (imageHeight - cardHeight) / 2;
 
-            // 创建正方形裁剪区域
+            // 创建护照尺寸的裁剪区域
             final ui.Rect cropRect = ui.Rect.fromLTWH(
               left.round().toDouble(),
               top.round().toDouble(),
-              squareSize.round().toDouble(),
-              squareSize.round().toDouble(),
+              cardWidth.round().toDouble(),
+              cardHeight.round().toDouble(),
             );
 
             // 创建PictureRecorder和Canvas
@@ -127,18 +133,18 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
               // 竖屏模式，不需要旋转
               canvas.drawImageRect(
                 image,
-                cropRect,
-                Rect.fromLTWH(0, 0, squareSize, squareSize),
+                Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()), // 源矩形使用完整图像
+                Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
                 Paint(),
               );
             } else {
               // 横屏模式，需要旋转90度
-              canvas.translate(squareSize, 0);
+              canvas.translate(cardHeight, 0);
               canvas.rotate(pi / 2);
               canvas.drawImageRect(
                 image,
-                cropRect,
-                Rect.fromLTWH(0, 0, squareSize, squareSize),
+                Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()), // 源矩形使用完整图像
+                Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
                 Paint(),
               );
             }
@@ -146,8 +152,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
             // 获取处理后的图像
             final ui.Picture imagePicture = recorder.endRecording();
             final ui.Image processedImage = await imagePicture.toImage(
-              squareSize.round(),
-              squareSize.round(),
+              cardWidth.round(),
+              cardHeight.round(),
             );
             // 转换为字节数据
             final ByteData? byteData = await processedImage.toByteData(format: ui.ImageByteFormat.png);
@@ -201,6 +207,70 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   Future<void> _takePicture() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
     final XFile picture = await _controller!.takePicture();
+
+    // 处理图片旋转和裁剪
+    final imageFile = File(picture.path);
+    final bytes = await imageFile.readAsBytes();
+    final image = await decodeImageFromList(bytes);
+
+    // 确定图片的实际宽高，并计算护照尺寸裁剪区域
+    final bool isPortrait = image.height > image.width;
+    final double imageWidth = isPortrait ? image.width.toDouble() : image.height.toDouble();
+    final double imageHeight = isPortrait ? image.height.toDouble() : image.width.toDouble();
+    
+    // 计算护照尺寸（与遮罩框相同的比例1.42:1）
+    final double cardWidth = imageWidth * 0.85;
+    final double cardHeight = cardWidth / 1.42;
+    final double left = (imageWidth - cardWidth) / 2;
+    final double top = (imageHeight - cardHeight) / 2;
+
+    // 创建护照尺寸的裁剪区域
+    final ui.Rect cropRect = ui.Rect.fromLTWH(
+      left,
+      top,
+      cardWidth,
+      cardHeight,
+    );
+
+    // 创建PictureRecorder和Canvas
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
+
+    if (isPortrait) {
+      // 竖屏模式，不需要旋转
+      canvas.drawImageRect(
+        image,
+        cropRect,
+        Rect.fromLTWH(0, 0, cardWidth, cardHeight),
+        Paint(),
+      );
+    } else {
+      // 横屏模式，需要旋转90度
+      canvas.translate(cardHeight, 0);
+      canvas.rotate(pi / 2);
+      canvas.drawImageRect(
+        image,
+        cropRect,
+        Rect.fromLTWH(0, 0, cardWidth, cardHeight),
+        Paint(),
+      );
+    }
+
+    // 获取处理后的图像
+    final ui.Picture imagePicture = recorder.endRecording();
+    final ui.Image processedImage = await imagePicture.toImage(
+      cardWidth.round(),
+      cardHeight.round(),
+    );
+    // 转换为字节数据
+    final ByteData? byteData = await processedImage.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List processedBytes = byteData!.buffer.asUint8List();
+    await imageFile.writeAsBytes(processedBytes);
+
+    // 释放资源
+    image.dispose();
+    processedImage.dispose();
+
     if (widget.onPhotoTaken != null) {
       widget.onPhotoTaken!(picture.path);
     }
