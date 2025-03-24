@@ -184,18 +184,20 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
         if (widget.customOverlay != null)
           widget.customOverlay!
         else if (widget.mode == CameraMode.scan)
-          AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: MaskPainter(
-                  animationValue: _animationController.value,
-                  indicatorColor: widget.indicatorColor ?? const Color(0xFFE1DED7),
-                ),
-                size: Size.infinite,
-                child: Container(),
-              );
-            },
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: MaskPainter(
+                    animationValue: _animationController.value,
+                    indicatorColor: widget.indicatorColor ?? const Color(0xFFE1DED7),
+                  ),
+                  size: Size.infinite,
+                  child: Container(),
+                );
+              },
+            ),
           )
         else
           CustomPaint(
