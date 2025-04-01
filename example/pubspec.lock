@@ -247,15 +247,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.15.0"
-  mrz_parser:
-    dependency: transitive
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "3b9df91cb3333d680c352a87598868764562eaf1"
-      url: "https://github.com/fastcode555/mrz_parser"
-    source: git
-    version: "2.0.1"
   mrz_scanner_plus:
     dependency: "direct main"
     description:
