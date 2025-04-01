@@ -250,10 +250,9 @@ packages:
   mrz_parser:
     dependency: transitive
     description:
-      name: mrz_parser
-      sha256: a7efa848a7d91c538a1c364dc63864d4cb60556037c32218d846aea473e971a7
-      url: "https://pub.dev"
-    source: hosted
+      path: "../third_party/mrz_parser"
+      relative: true
+    source: path
     version: "2.0.1"
   mrz_scanner_plus:
     dependency: "direct main"
@@ -261,7 +260,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.1"
+    version: "0.0.5"
   path:
     dependency: transitive
     description:

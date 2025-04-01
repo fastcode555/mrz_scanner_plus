@@ -1,6 +1,6 @@
 name: mrz_scanner_plus
 description: "A new Flutter plugin When scanning and photographing a document, only the document image within the mask will be returned."
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/fastcode555/mrz_scanner_plus.git
 
 environment:
@@ -13,7 +13,8 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   camera: ^0.10.5+9
   google_mlkit_text_recognition: ^0.11.0
-  mrz_parser: ^2.0.1
+  mrz_parser:
+    path: third_party/mrz_parser
   path_provider: ^2.1.2
   path: ^1.8.3
 

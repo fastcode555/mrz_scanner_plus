@@ -1,0 +1,12 @@
+name: mrz_parser
+description: Parse MRZ (Machine Readable Zone) from identity documents.
+version: 2.0.1
+homepage: https://github.com/foxanna/mrz_parser
+
+environment:
+  sdk: ">=2.12.0 <4.0.0"
+
+dev_dependencies:
+  collection: ^1.19.0
+  test: ">=1.16.5 <2.0.0"
+  very_good_analysis: ^6.0.0
