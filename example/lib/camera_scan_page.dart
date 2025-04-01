@@ -12,8 +12,12 @@ class CameraScanPage extends StatefulWidget {
 }
 
 class _CameraScanPageState extends State<CameraScanPage> {
+  final List<String> _scanResult = [];
+  final ValueNotifier<String> _notifier = ValueNotifier('');
+
   void _onDetected(String text) {
     debugPrint('ocr recognize: $text');
+    _notifier.value = text;
   }
 
   void _onMRZDetected(String imagePath, MRZResult mrzResult) {
@@ -25,16 +29,42 @@ class _CameraScanPageState extends State<CameraScanPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('MRZ扫描结果: ${mrzResult.toJson()}')),
       );
+      _scanResult.add('${mrzResult.toJson()}');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CameraView(
-        mode: CameraMode.scan,
-        onMRZDetected: _onMRZDetected,
-        onDetected: _onDetected,
+      body: Stack(
+        children: [
+          CameraView(
+            mode: CameraMode.scan,
+            onMRZDetected: _onMRZDetected,
+            onDetected: _onDetected,
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ValueListenableBuilder<String>(
+              valueListenable: _notifier,
+              builder: (_, value, __) {
+                _scanResult.add(value);
+                return SizedBox(
+                  height: 200,
+                  child: ListView.separated(
+                    itemBuilder: (_, index) => Text(
+                      _scanResult[index],
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    reverse: true,
+                    separatorBuilder: (_, __) => const Divider(),
+                    itemCount: _scanResult.length,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

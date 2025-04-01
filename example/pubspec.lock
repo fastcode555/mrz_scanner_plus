@@ -250,9 +250,11 @@ packages:
   mrz_parser:
     dependency: transitive
     description:
-      path: "../third_party/mrz_parser"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "3b9df91cb3333d680c352a87598868764562eaf1"
+      url: "https://github.com/fastcode555/mrz_parser"
+    source: git
     version: "2.0.1"
   mrz_scanner_plus:
     dependency: "direct main"
@@ -260,7 +262,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.5"
+    version: "0.0.6"
   path:
     dependency: transitive
     description:

@@ -116,7 +116,9 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
           if (_controller != null && _controller!.value.isInitialized) {
             await _controller?.stopImageStream();
             final cropFile = await _takeAndCropImage();
-            widget.onMRZDetected?.call(cropFile.path, mrzResult);
+            Future.delayed(const Duration(milliseconds: 500), () {
+              widget.onMRZDetected?.call(cropFile.path, mrzResult);
+            });
           }
         }
       } catch (e) {
