@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mrz_parser/mrz_parser.dart';
+import 'package:mrz_scanner_plus/src/mrz_parser/mrz_parser.dart';
+import 'package:mrz_scanner_plus/src/mrz_parser/mrz_result.dart';
 
 class MRZHelper {
   static List<String>? getFinalListToParse(List<String> ableToScanTextList) {

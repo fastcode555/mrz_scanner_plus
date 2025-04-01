@@ -5,9 +5,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:mrz_parser/mrz_parser.dart';
 import 'package:mrz_scanner_plus/src/mrz_helper.dart';
 import 'package:mrz_scanner_plus/src/mask_painter.dart';
+import 'package:mrz_scanner_plus/src/mrz_parser/mrz_result.dart';
 
 typedef OnMRZDetected = void Function(String imagePath, MRZResult mrzResult);
 typedef OnDetected = void Function(String recognizeText);
