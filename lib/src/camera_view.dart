@@ -8,6 +8,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:mrz_scanner_plus/src/mrz_helper.dart';
 import 'package:mrz_scanner_plus/src/mask_painter.dart';
 import 'package:mrz_scanner_plus/src/mrz_parser/mrz_result.dart';
+import 'package:mrz_scanner_plus/src/parser.dart';
 
 typedef OnMRZDetected = void Function(String imagePath, MRZResult mrzResult);
 typedef OnDetected = void Function(String recognizeText);
@@ -111,7 +112,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
         final InputImage inputImage = _processImageForMlKit(image);
         final recognizedText = await _textRecognizer.processImage(inputImage);
         widget.onDetected?.call(recognizedText.text);
-        final mrzResult = MRZHelper.parse(recognizedText.text);
+        final mrzResult = Parser.parse(recognizedText.text);
         if (mrzResult != null && widget.onMRZDetected != null) {
           if (_controller != null && _controller!.value.isInitialized) {
             await _controller?.stopImageStream();
