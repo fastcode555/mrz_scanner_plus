@@ -88,4 +88,8 @@ class MRZResult {
       expiryDate.hashCode ^
       personalNumber.hashCode ^
       personalNumber2.hashCode;
+
+  bool isUnAvailable() {
+    return surnames.isEmpty || givenNames.isEmpty || documentNumber.isEmpty;
+  }
 }

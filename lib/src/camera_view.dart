@@ -113,14 +113,15 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
         final recognizedText = await _textRecognizer.processImage(inputImage);
         widget.onDetected?.call(recognizedText.text);
         final mrzResult = Parser.parse(recognizedText.text);
-        if (mrzResult != null && widget.onMRZDetected != null) {
-          if (_controller != null && _controller!.value.isInitialized) {
-            await _controller?.stopImageStream();
-            final cropFile = await _takeAndCropImage();
-            Future.delayed(const Duration(milliseconds: 500), () {
-              widget.onMRZDetected?.call(cropFile.path, mrzResult);
-            });
-          }
+        if (mrzResult == null || widget.onMRZDetected == null) return;
+        if (mrzResult.isUnAvailable()) return;
+
+        if (_controller != null && _controller!.value.isInitialized) {
+          await _controller?.stopImageStream();
+          final cropFile = await _takeAndCropImage();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            widget.onMRZDetected?.call(cropFile.path, mrzResult);
+          });
         }
       } catch (e) {
         debugPrint(e.toString());

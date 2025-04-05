@@ -34,6 +34,7 @@ class MRZHelper {
           .replaceAll('⪡', '<')
           .replaceAll('«', '<')
           .replaceAll('⟨', '<')
+          .replaceAll('<*', '<<')
           .replaceAll('《', '<')
           .replaceAll('‹', '<')
           .replaceAll('<K<', '<<<')
@@ -44,11 +45,14 @@ class MRZHelper {
         var tail = text.substring(index, text.length);
         text = '$header${tail.replaceAll('k', '<').replaceAll('K', '<')}';
       }
+
+      text = _ifNotEnough(text);
     }
     var list = text.split('');
     // to check if the text belongs to any MRZ format or not
+
     if (list.length != 44 && list.length != 30 && list.length != 36) {
-      return text.contains('<') ? text : '';
+      return (text.contains('<') && text.replaceAll('<', '').trim().isNotEmpty) ? text : '';
     }
 
     for (var i = 0; i < list.length; i++) {
@@ -95,42 +99,46 @@ class MRZHelper {
 
   static List<List<String>> _filterAvaliableLines(List<String> lines) {
     final avaliableLines = <List<String>>[];
-    final mrz30Lines = <String>[];
-    final mrz36Lines = <String>[];
     final mrz44Lines = <String>[];
 
     var containSpecialSymbolLine = '<';
 
     for (final line in lines) {
+      final length = line.length;
+      if (length == 44) {
+        mrz44Lines.add(line);
+        continue;
+      }
+
       if (line.contains('<')) {
         final isEmpty = line.replaceAll('<', '').trim().isEmpty;
         if (!isEmpty) {
           containSpecialSymbolLine = line;
         }
       }
-
-      final length = line.length;
-      if (length == 30) mrz30Lines.add(line);
-      if (length == 36) mrz36Lines.add(line);
-      if (length == 44) mrz44Lines.add(line);
-    }
-
-    if (mrz30Lines.isNotEmpty && mrz30Lines.length == 1) {
-      mrz30Lines.insert(0, '$containSpecialSymbolLine${'<' * (30 - containSpecialSymbolLine.length)}');
-    }
-
-    if (mrz36Lines.isNotEmpty && mrz36Lines.length == 1) {
-      mrz36Lines.insert(0, '$containSpecialSymbolLine${'<' * (36 - containSpecialSymbolLine.length)}');
     }
 
     if (mrz44Lines.isNotEmpty && mrz44Lines.length == 1) {
       mrz44Lines.insert(0, '$containSpecialSymbolLine${'<' * (44 - containSpecialSymbolLine.length)}');
     }
 
-    if (mrz30Lines.length >= 2) avaliableLines.add(mrz30Lines);
-    if (mrz36Lines.length >= 2) avaliableLines.add(mrz36Lines);
     if (mrz44Lines.length >= 2) avaliableLines.add(mrz44Lines);
 
     return avaliableLines;
+  }
+
+  static String _ifNotEnough(String text) {
+    if (text.length > 36 && text.length < 44) {
+      return _createEnoughText(44, text);
+    }
+    return text;
+  }
+
+  static String _createEnoughText(int length, String text) {
+    var leftLength = length - text.length;
+    final index = text.indexOf('<');
+    final header = text.substring(0, index);
+    final tail = text.substring(index, text.length);
+    return '$header${'<' * leftLength}$tail';
   }
 }
