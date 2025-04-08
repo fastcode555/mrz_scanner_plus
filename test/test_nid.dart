@@ -19,7 +19,7 @@ void main() {
   RegExp dobRegex = RegExp(r'(\d{2}-\d{2}-\d{4})');
   RegExp genderRegex = RegExp(r'(\d{2}-\d{2}-\d{4}.*?[M|F])');
   RegExp issueDateRegex = RegExp(r'(\d{2}-\d{2}-\d{2}(?=[ \n]))');
-  RegExp cardNumberRegex = RegExp(r'([A-Z]{1}[0-9Oo ]{6,9}(?=\())');
+  RegExp cardNumberRegex = RegExp(r'([A-Z]{1}[0-9Oo ]{6,9}\([0-9a-zA-Z]{1,3}\))');
 
   // 匹配结果
   String? name = nameRegex.firstMatch(text.replaceAll('，', ','))?.group(1)?.trim();

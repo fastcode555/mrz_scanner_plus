@@ -7,7 +7,7 @@ class MrzNid {
   static RegExp dobRegex = RegExp(r'(\d{2}-\d{2}-\d{4})');
   static RegExp genderRegex = RegExp(r'(\d{2}-\d{2}-\d{4}.*?[M|F])');
   static RegExp issueDateRegex = RegExp(r'(\d{2}-\d{2}-\d{2}(?=[ \n]))');
-  static RegExp cardNumberRegex = RegExp(r'([A-Z]{1}[0-9Oo ]{6,9}(?=\())');
+  static RegExp cardNumberRegex = RegExp(r'([A-Z]{1}[0-9Oo ]{6,9}\([0-9a-zA-Z]{1,3}\))');
 
   static MRZResult? parse(String text) {
     // 匹配结果
@@ -35,12 +35,12 @@ class MrzNid {
           countryCode: '',
           surnames: lastName,
           givenNames: firstName,
-          documentNumber: id!,
+          documentNumber: cardNumber ?? '',
           nationalityCountryCode: '',
           birthDate: dob,
           sex: sex,
           expiryDate: issueDate,
-          personalNumber: cardNumber ?? '');
+          personalNumber: id!);
     } catch (e) {
       print(e);
     }
