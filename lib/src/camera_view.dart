@@ -267,7 +267,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     final bool isPortrait = image.height > image.width;
 
     // 计算护照尺寸（与遮罩框相同的比例1.42:1）
-    final double cardWidth = realWidth * 0.85;
+    final double cardWidth = realWidth /** 0.85*/;
     final double cardHeight = cardWidth / 1.42;
     final double left = (image.width - cardWidth) / 2;
     final double top = (image.height - cardHeight) / 2;
