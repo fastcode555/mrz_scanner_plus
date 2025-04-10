@@ -145,7 +145,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
       metadata: InputImageMetadata(
         size: imageSize,
         rotation: imageRotation,
-        format: Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.yuv420,
+        format: Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888,
         bytesPerRow: image.planes.first.bytesPerRow,
       ),
     );
