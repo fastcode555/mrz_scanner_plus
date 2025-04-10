@@ -85,7 +85,6 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
       camera,
       ResolutionPreset.max,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.yuv420,
     );
 
     await _controller?.initialize();
@@ -100,7 +99,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   DateTime _lastProcessTime = DateTime.now();
 
   Future<void> _startImageStream() async {
-    await _controller?.startImageStream((CameraImage image) async {
+    _controller?.startImageStream((CameraImage image) async {
       final now = DateTime.now();
       if (_isProcessing || now.difference(_lastProcessTime).inMilliseconds < 500) {
         return;
@@ -146,7 +145,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
       metadata: InputImageMetadata(
         size: imageSize,
         rotation: imageRotation,
-        format: InputImageFormat.yuv420,
+        format: Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.yuv420,
         bytesPerRow: image.planes.first.bytesPerRow,
       ),
     );
@@ -154,6 +153,9 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    if (_controller?.value.isStreamingImages ?? false) {
+      _controller?.stopImageStream();
+    }
     _controller?.dispose();
     _textRecognizer.close();
     _animationController.dispose();
