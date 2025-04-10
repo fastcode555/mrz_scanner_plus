@@ -5,7 +5,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:mrz_scanner_plus/src/mrz_helper.dart';
 import 'package:mrz_scanner_plus/src/mask_painter.dart';
 import 'package:mrz_scanner_plus/src/mrz_parser/mrz_result.dart';
 import 'package:mrz_scanner_plus/src/parser.dart';
@@ -89,6 +88,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
 
     await _controller?.initialize();
     if (widget.mode == CameraMode.scan) {
+      await Future.delayed(Duration(milliseconds: Platform.isAndroid ? 500 : 2000));
       await _startImageStream();
     }
     if (mounted) setState(() {});
