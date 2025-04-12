@@ -40,6 +40,7 @@ class CameraView extends StatefulWidget {
   final MrzCameraController? controller;
   final Widget? photoButton;
   final TextRecognitionScript script;
+  final ResolutionPreset resolutionPreset;
 
   const CameraView({
     super.key,
@@ -51,6 +52,7 @@ class CameraView extends StatefulWidget {
     this.customOverlay,
     this.mode = CameraMode.scan,
     this.photoButton,
+    this.resolutionPreset = ResolutionPreset.veryHigh,
     this.script = TextRecognitionScript.latin,
   });
 
@@ -82,73 +84,36 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     final camera = cameras.first;
     _controller = CameraController(
       camera,
-      ResolutionPreset.max,
+      widget.resolutionPreset,
       enableAudio: false,
     );
 
     await _controller?.initialize();
+    if (mounted) setState(() {});
     if (widget.mode == CameraMode.scan) {
-      await Future.delayed(Duration(milliseconds: Platform.isAndroid ? 500 : 2000));
       await _startImageStream();
     }
-    if (mounted) setState(() {});
     widget.controller?._bind(_controller, context);
   }
 
-  bool _isProcessing = false;
-  DateTime _lastProcessTime = DateTime.now();
-
   Future<void> _startImageStream() async {
-    _controller?.startImageStream((CameraImage image) async {
-      final now = DateTime.now();
-      if (_isProcessing || now.difference(_lastProcessTime).inMilliseconds < 500) {
-        return;
-      }
-      _isProcessing = true;
-      _lastProcessTime = now;
+    var cropFile = await _takeAndCropImage();
+    final ocrFile = await _cropImage(cropFile, 0.85);
 
-      try {
-        final InputImage inputImage = _processImageForMlKit(image);
-        final recognizedText = await _textRecognizer.processImage(inputImage);
-        widget.onDetected?.call(recognizedText.text);
-        final mrzResult = Parser.parse(recognizedText.text);
-        if (mrzResult == null || widget.onMRZDetected == null) return;
-        if (mrzResult.isUnAvailable()) return;
+    final InputImage inputImage = InputImage.fromFile(ocrFile);
+    final recognizedText = await _textRecognizer.processImage(inputImage);
+    widget.onDetected?.call(recognizedText.text);
 
-        if (_controller != null && _controller!.value.isInitialized) {
-          await _controller?.stopImageStream();
-          final cropFile = await _takeAndCropImage();
-          Future.delayed(const Duration(milliseconds: 500), () {
-            widget.onMRZDetected?.call(cropFile.path, mrzResult);
-          });
-        }
-      } catch (e) {
-        debugPrint(e.toString());
-      } finally {
-        _isProcessing = false;
-      }
-    });
-  }
-
-  InputImage _processImageForMlKit(CameraImage image) {
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
+    final mrzResult = Parser.parse(recognizedText.text);
+    if (mrzResult == null || widget.onMRZDetected == null || mrzResult.isUnAvailable()) {
+      if (cropFile.existsSync()) cropFile.deleteSync();
+      if (ocrFile.existsSync()) ocrFile.deleteSync();
+      Future.delayed(const Duration(milliseconds: 100), _startImageStream);
+      return;
     }
-    final bytes = allBytes.done().buffer.asUint8List();
+    if (ocrFile.existsSync()) ocrFile.deleteSync();
 
-    final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    const InputImageRotation imageRotation = InputImageRotation.rotation0deg;
-
-    return InputImage.fromBytes(
-      bytes: bytes,
-      metadata: InputImageMetadata(
-        size: imageSize,
-        rotation: imageRotation,
-        format: Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888,
-        bytesPerRow: image.planes.first.bytesPerRow,
-      ),
-    );
+    widget.onMRZDetected?.call(cropFile.path, mrzResult);
   }
 
   @override
@@ -251,7 +216,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     );
   }
 
-  Future<File> _takeAndCropImage() async {
+  Future<File> _takeAndCropImage([double cropRatio = 1]) async {
     final XFile picture = await _controller!.takePicture();
     // 处理图片旋转
     final imageFile = File(picture.path);
@@ -269,7 +234,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     final bool isPortrait = image.height > image.width;
 
     // 计算护照尺寸（与遮罩框相同的比例1.42:1）
-    final double cardWidth = realWidth /** 0.85*/;
+    final double cardWidth = realWidth * cropRatio;
     final double cardHeight = cardWidth / 1.42;
     final double left = (image.width - cardWidth) / 2;
     final double top = (image.height - cardHeight) / 2;
@@ -321,5 +286,51 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     image.dispose();
     processedImage.dispose();
     return imageFile;
+  }
+
+  Future<File> _cropImage(File imageFile, [double cropRatio = 1]) async {
+    final bytes = await imageFile.readAsBytes();
+    final image = await decodeImageFromList(bytes);
+
+    final double cardWidth = image.width * cropRatio;
+    final double cardHeight = image.height * cropRatio;
+    final double left = (image.width - cardWidth) / 2;
+    final double top = (image.height - cardHeight) / 2;
+
+    final ui.Rect cropRect = ui.Rect.fromLTWH(
+      left,
+      top,
+      cardWidth,
+      cardHeight,
+    );
+
+    // 创建PictureRecorder和Canvas
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
+
+    canvas.drawImageRect(
+      image,
+      cropRect, // 源矩形使用裁剪区域
+      Rect.fromLTWH(0, 0, cardWidth, cardHeight), // 目标矩形使用裁剪尺寸
+      Paint(),
+    );
+
+    // 获取处理后的图像
+    final ui.Picture imagePicture = recorder.endRecording();
+    final ui.Image processedImage = await imagePicture.toImage(
+      cardWidth.round(),
+      cardHeight.round(),
+    );
+    // 转换为字节数据
+    final ByteData? byteData = await processedImage.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List processedBytes = byteData!.buffer.asUint8List();
+
+    File newFile = File('${imageFile.parent.path}${DateTime.now().microsecondsSinceEpoch}.png');
+    await newFile.writeAsBytes(processedBytes);
+
+    // 释放资源
+    image.dispose();
+    processedImage.dispose();
+    return newFile;
   }
 }
