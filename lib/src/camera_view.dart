@@ -65,6 +65,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   late TextRecognizer _textRecognizer;
 
   late AnimationController _animationController;
+  bool _isProcessing = false;
+  DateTime _lastProcessTime = DateTime.now();
 
   @override
   void initState() {
@@ -91,9 +93,67 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     await _controller?.initialize();
     if (mounted) setState(() {});
     if (widget.mode == CameraMode.scan) {
-      await _startImageStream();
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 1000));
+        await _startImageStreamIos();
+      } else {
+        await _startImageStream();
+      }
     }
     widget.controller?._bind(_controller, context);
+  }
+
+  Future<void> _startImageStreamIos() async {
+    _controller?.startImageStream((CameraImage image) async {
+      final now = DateTime.now();
+      if (_isProcessing || now.difference(_lastProcessTime).inMilliseconds < 500) {
+        return;
+      }
+      _isProcessing = true;
+      _lastProcessTime = now;
+
+      try {
+        final InputImage inputImage = _processImageForMlKit(image);
+        final recognizedText = await _textRecognizer.processImage(inputImage);
+        widget.onDetected?.call(recognizedText.text);
+        final mrzResult = Parser.parse(recognizedText.text);
+        if (mrzResult == null || widget.onMRZDetected == null) return;
+        if (mrzResult.isUnAvailable()) return;
+
+        if (_controller != null && _controller!.value.isInitialized) {
+          await _controller?.stopImageStream();
+          final cropFile = await _takeAndCropImage();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            widget.onMRZDetected?.call(cropFile.path, mrzResult);
+          });
+        }
+      } catch (e) {
+        debugPrint(e.toString());
+      } finally {
+        _isProcessing = false;
+      }
+    });
+  }
+
+  InputImage _processImageForMlKit(CameraImage image) {
+    final WriteBuffer allBytes = WriteBuffer();
+    for (final Plane plane in image.planes) {
+      allBytes.putUint8List(plane.bytes);
+    }
+    final bytes = allBytes.done().buffer.asUint8List();
+
+    final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    const InputImageRotation imageRotation = InputImageRotation.rotation0deg;
+
+    return InputImage.fromBytes(
+      bytes: bytes,
+      metadata: InputImageMetadata(
+        size: imageSize,
+        rotation: imageRotation,
+        format: Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888,
+        bytesPerRow: image.planes.first.bytesPerRow,
+      ),
+    );
   }
 
   Future<void> _startImageStream() async {
