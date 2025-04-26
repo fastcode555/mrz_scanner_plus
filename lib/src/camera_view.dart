@@ -82,7 +82,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     final camera = cameras.first;
     _controller = CameraController(
       camera,
-      ResolutionPreset.max,
+      ResolutionPreset.veryHigh,
       enableAudio: false,
     );
 
