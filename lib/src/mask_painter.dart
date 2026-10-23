@@ -40,8 +40,6 @@ class MaskPainter extends CustomPainter {
       paint,
     );
 
-    const lineLength = 40.0;
-
     const horizontalLineLength = 30.0;
     const verticalLineLength = 20.0;
     const offset = 4.0;
@@ -154,7 +152,7 @@ class MaskPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [indicatorColor.withOpacity(0.1), indicatorColor, indicatorColor.withOpacity(0.1)],
+          colors: [indicatorColor.withValues(alpha: 0.1), indicatorColor, indicatorColor.withValues(alpha: 0.1)],
           stops: const [0.0, 0.5, 1.0],
         ).createShader(Rect.fromLTWH(left, scanLineY - 20, cardWidth, 40));
 

@@ -100,6 +100,7 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
         await _startImageStream();
       }
     }
+    if (!mounted) return;
     widget.controller?._bind(_controller, context);
   }
 
@@ -275,6 +276,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
   }
 
   Future<File> _takeAndCropImage([double cropRatio = 1]) async {
+    // Read the screen size before the awaits below, while the context is known to be mounted.
+    final screenSize = MediaQuery.sizeOf(context);
     final XFile picture = await _controller!.takePicture();
     // 处理图片旋转
     final imageFile = File(picture.path);
@@ -283,8 +286,8 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
     final image = await decodeImageFromList(bytes);
 
     // 获取预览尺寸和实际图片尺寸
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = screenSize.width;
+    final screenHeight = screenSize.height;
 
     final screenRatio = screenWidth / screenHeight;
     final realWidth = image.height * screenRatio;

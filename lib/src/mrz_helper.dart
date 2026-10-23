@@ -82,7 +82,7 @@ class MRZHelper {
 
     final mrzLines = _filterAvaliableLines(ableToScanText);
     for (final mrz2Line in mrzLines) {
-      debugPrint('OCR:\N${mrz2Line.join('\n')}');
+      debugPrint('OCR:\n${mrz2Line.join('\n')}');
       var lines = MRZHelper.getFinalListToParse(mrz2Line);
       if (lines != null && lines.isNotEmpty) {
         try {
@@ -90,7 +90,7 @@ class MRZHelper {
           debugPrint('$mrzResult');
           return mrzResult;
         } catch (e) {
-          print(e);
+          debugPrint('$e');
         }
       }
     }

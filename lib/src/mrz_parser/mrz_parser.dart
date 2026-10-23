@@ -1,4 +1,4 @@
-library mrz_parser;
+library;
 
 import 'package:mrz_scanner_plus/src/mrz_parser/mrz_exceptions.dart';
 import 'package:mrz_scanner_plus/src/mrz_parser/mrz_result.dart';

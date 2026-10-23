@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:mrz_scanner_plus/src/mrz_parser/mrz_result.dart';
 
@@ -42,7 +43,7 @@ class MrzNid {
           expiryDate: issueDate,
           personalNumber: id!);
     } catch (e) {
-      print(e);
+      debugPrint('$e');
     }
     return null;
   }
