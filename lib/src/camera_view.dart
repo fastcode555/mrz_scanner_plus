@@ -202,8 +202,12 @@ class _CameraViewState extends State<CameraView> with SingleTickerProviderStateM
       fit: StackFit.expand,
       children: [
         SizedBox.expand(
+          // Cover the box, but clip what overflows it: the mask below is drawn inside the box only, so an unclipped
+          // preview spilled unmasked over whatever sits above the camera (seen on iPhones whose camera ratio differs
+          // from the box's).
           child: FittedBox(
             fit: BoxFit.cover,
+            clipBehavior: Clip.hardEdge,
             child: SizedBox(
               width: _controller!.value.previewSize!.height,
               height: _controller!.value.previewSize!.width,
